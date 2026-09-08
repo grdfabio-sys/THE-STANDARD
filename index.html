@@ -374,6 +374,10 @@ tr:last-child td{border-bottom:none;}
 .cal-daytitle{font-family:'Oswald',sans-serif;font-size:16px;text-transform:uppercase;letter-spacing:.04em;color:var(--chalk);margin-bottom:10px;}
 .cal-act{font-size:13.5px;color:var(--chalk);background:var(--panel-alt);border:1px solid var(--line);border-left:3px solid var(--brass);border-radius:8px;padding:10px 12px;margin-bottom:7px;}
 .cal-empty{font-size:13px;color:var(--chalk-dim);font-style:italic;}
+.ex-variant{margin-top:8px;}
+.ex-variant select{appearance:none;-webkit-appearance:none;-moz-appearance:none;background:var(--bg) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237c9a5b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") no-repeat right 9px center;border:1px solid var(--line);border-radius:8px;color:var(--chalk-dim);font-family:'IBM Plex Mono',monospace;font-size:12.5px;padding:6px 28px 6px 10px;cursor:pointer;}
+.ex-variant select:focus{outline:none;border-color:var(--moss);}
+.ex-variant select option{background:var(--panel);color:var(--chalk);}
 .ex-weight{margin-top:8px;}
 .ex-weight select{appearance:none;-webkit-appearance:none;-moz-appearance:none;background:var(--bg) url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23c9a24b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>") no-repeat right 9px center;border:1px solid var(--brass-dim);border-radius:8px;color:var(--chalk);font-family:'IBM Plex Mono',monospace;font-size:12.5px;padding:6px 28px 6px 10px;cursor:pointer;}
 .ex-weight select:focus{outline:none;border-color:var(--brass);}
@@ -462,10 +466,22 @@ tr:last-child td{border-bottom:none;}
 .build-row:first-of-type{border-top:none;}
 .build-row .br-main{display:flex;flex-direction:column;gap:2px;min-width:0;}
 .build-row .br-name{color:var(--chalk);}
+.br-idx{display:inline-block;min-width:20px;color:var(--brass);font-family:'IBM Plex Mono',monospace;font-size:12px;}
+.br-tag{margin-left:8px;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--chalk-dim);}
+.bg-sub{font-family:'Inter',sans-serif;font-size:11px;text-transform:none;letter-spacing:0;color:var(--chalk-dim);margin-left:6px;}
+.build-ss-note{font-size:11.5px;color:var(--chalk-dim);margin-top:6px;padding-left:2px;}
+.build-row .br-cue{font-size:11.5px;line-height:1.4;color:var(--chalk-dim);}
 .build-row .br-weight{font-size:11.5px;color:var(--brass);font-family:'IBM Plex Mono',monospace;}
 .build-row .br-sets{font-family:'IBM Plex Mono',monospace;color:var(--chalk-dim);white-space:nowrap;}
 .build-note{font-size:12.5px;line-height:1.55;color:var(--chalk-dim);margin-top:12px;border-left:2px solid var(--line);padding-left:10px;}
+.build-guide{margin-top:12px;border-left:2px solid var(--brass-dim);padding-left:10px;}
+.build-guide .bg-h{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--brass);margin-bottom:5px;}
+.build-guide .bg-line{font-size:12.5px;line-height:1.55;color:var(--chalk-dim);margin-bottom:3px;}
+.build-guide .bg-line b{color:var(--chalk);}
 .build-note b{color:var(--chalk);}
+.build-swipe-hint{font-size:11.5px;color:var(--chalk-dim);text-align:center;margin-top:10px;opacity:.85;}
+#bResult.swiped{animation:bfade .22s ease;}
+@keyframes bfade{from{opacity:.35;transform:translateY(4px);}to{opacity:1;transform:none;}}
 .build-warn{font-size:12.5px;line-height:1.5;color:#cf9a5f;border-left:2px solid #cf9a5f;padding-left:10px;margin-top:12px;}
 .build-warn b{color:#e6b877;}
 .build-ref-row{display:flex;align-items:center;gap:10px;margin:2px 0 4px;flex-wrap:wrap;}
@@ -1366,7 +1382,9 @@ function exTable(rows, withLog){
 function exTableW(rows, program, unitId){
   let html = '<table><thead><tr><th>Esercizio</th><th>Serie x Rip</th><th>Cue</th></tr></thead><tbody>';
   rows.forEach((r,i)=>{
-    html += `<tr><td class="ex-name">${r[0]}${typeof weightSelect==="function"?weightSelect(program,unitId,i,r[0]):""}</td><td class="ex-sets">${r[1]}</td><td class="ex-cue">${r[2]||""}</td></tr>`;
+    const sv=(typeof savedVariant==="function")?savedVariant(program,unitId,i):"";
+    const disp=sv||r[0];
+    html += `<tr><td class="ex-name"><span class="ex-nm">${disp}</span>${typeof variantSelect==="function"?variantSelect(program,unitId,i,r[0]):""}${typeof weightSelect==="function"?weightSelect(program,unitId,i,r[0]):""}</td><td class="ex-sets">${r[1]}</td><td class="ex-cue">${r[2]||""}</td></tr>`;
   });
   html += '</tbody></table>';
   return html;
@@ -1457,7 +1475,7 @@ function renderDayDetail(){
       </div>`;
   }
   wireLogInputs(wrap);
-  wireWeights(wrap);
+  wireWeights(wrap); wireVariants(wrap);
   wireTextInputs(wrap);
   wireCompletion(wrap, ()=>{ renderDayDetail(); renderPlates(); });
 }
@@ -2325,7 +2343,7 @@ const upperWeeks = [
    {mob:uMob.A, act:uAct.A, ex:[
      ["BB Strict Press","3 × 10 · rec. 1'30–2'","Sali di carico progressivamente e mantieni sulle serie di lavoro."],
      ["Superset PULL — Ring Row Foot Elevated + KB Gorilla Row","4 × 8 + 10 · rec. 2'","Ring row rialzati: riduci l'altezza sotto i piedi per una bella ampiezza (dischi sotto i piedi o piedi a terra)."],
-     ["Élévation Latérale + Frontale","4 × 10 · rec. 1'30–2'","Privilegia il movimento sul carico, resta sotto l'altezza delle spalle. 1 rip = laterale + frontale."]]},
+     ["Lateral + Front Raise Combo","4 × 10 · rec. 1'30–2'","Privilegia il movimento sul carico, resta sotto l'altezza delle spalle. 1 rip = laterale + frontale."]]},
    {mob:uMob.B, act:uAct.B, ex:[
      ["Superset — Strict Pull Up + Bridge Floor Press Doppio DB","4 × 8–10 + 8–10 · rec. 2'–2'30","Pull up — inter: 2–6 rip / novizio: 4–6 con elastico o eccentrica (trattieni 3–4 sec la discesa, alla sbarra o agli anelli)."],
      ["Superset — DB Biceps Curl (presa martello) + BB Skull Crusher","4 × 10 + 10 · rec. 2'","Skull crusher: attenzione alla presa, non spezzare i polsi, gomiti stretti."],
@@ -2339,7 +2357,7 @@ const upperWeeks = [
    {mob:uMob.A, act:uAct.A, ex:[
      ["BB Strict Press","4 × 10 · rec. 1'30–2'","—"],
      ["Superset PULL — Ring Row Foot Elevated + KB Gorilla Row","4 × 8 + 10 · rec. 2'","Riduci l'altezza sotto i piedi per una bella ampiezza."],
-     ["Élévation Latérale + Frontale","4 × 10 · rec. 1'30–2'","Altezza spalle. 1 rip = laterale + frontale."]]},
+     ["Lateral + Front Raise Combo","4 × 10 · rec. 1'30–2'","Altezza spalle. 1 rip = laterale + frontale."]]},
    {mob:uMob.B, act:uAct.B, ex:[
      ["Superset — Strict Pull Up + Bridge Floor Press Doppio DB","5 × 8–10 + 8–10 · rec. 2'–2'30","Pull up — inter: 2–6 / novizio: 4–6 con elastico o eccentrica (3–4 sec). Floor press: solleva i glutei per attivare la fascia addominale (o glutei a terra)."],
      ["Superset — DB Biceps Curl (presa martello) + BB Skull Crusher","4 × 10 + 10 · rec. 2'","Biceps curl stretto, senza slanci. Skull crusher: gomiti stretti, fletti solo i gomiti."],
@@ -2353,7 +2371,7 @@ const upperWeeks = [
    {mob:uMob.D, act:uAct.D, ex:[
      ["BB Strict Press","4 × 8 · rec. 1'30–2'","—"],
      ["Superset PULL — Body Row + Rowing Doppio KB Pause","4 × 8 + 10 · rec. 2'","Pausa sul rowing doppio KB: 1 sec in alto ad ogni rip."],
-     ["Développé Incliné Doppio DB","3 × 10 · rec. 1'30–2'","Su panca rialzata con dischi o panca inclinata."]]},
+     ["Double DB Incline Press (a terra)","3 × 10 · rec. 1'30–2'","Su panca rialzata con dischi o panca inclinata."]]},
    {mob:uMob.B, act:uAct.E, ex:[
      ["Superset — Ring Row Foot Elevated + Z Press Doppio KB","4 × 8–10 + 6–8 · rec. 2'–2'30","Ring row rialzati: riduci l'altezza sotto i piedi per una bella ampiezza."],
      ["Superset — BB Biceps Curl + KB Triceps Extension","4 × 10 + 10 · rec. 2'","—"],
@@ -2367,7 +2385,7 @@ const upperWeeks = [
    {mob:uMob.D, act:uAct.D, ex:[
      ["BB Strict Press","5 × 6 · rec. 1'30–2'","—"],
      ["Superset PULL — Body Row + Rowing Doppio KB Pause","4 × 8 + 10 · rec. 2'","Pausa in alto sul rowing: 1-2 sec."],
-     ["Développé Incliné Doppio DB","3 × 10 · rec. 1'30–2'","—"]]},
+     ["Double DB Incline Press (a terra)","3 × 10 · rec. 1'30–2'","—"]]},
    {mob:uMob.B, act:uAct.E, ex:[
      ["Superset — Ring Row Foot Elevated + Z Press Doppio KB","5 × 8–10 + 6–8 · rec. 2'–2'30","Bella ampiezza sui ring row, adatta l'altezza sotto i piedi."],
      ["Superset — BB Biceps Curl + KB Triceps Extension","4 × 10 + 10 · rec. 2'","—"],
@@ -2436,10 +2454,10 @@ const upperWeeks = [
 ];
 
 const upperExVideos = {
-  "u-w1-s1":[["Strict Pull Up", "https://youtube.com/shorts/mH1bxFbU_ro"],["Bridge Floor Press Double DB", "https://youtube.com/shorts/ji9k92Uyr8w"],["BB Strict Press", "https://youtube.com/shorts/3fFpYacwAdY"],["Video adattamento", "https://youtube.com/shorts/FQPTJ2hyyF0"],["Ring Row Foot Elevated", "https://youtube.com/shorts/5Eqkm2og2uU"],["KB Gorilla Row", "https://youtube.com/shorts/zI2-KT6OHtA"],["DB Biceps Curl (prise Marteau)", "https://youtube.com/shorts/Vrbn2kiW0bo"],["BB Skull Crusher", "https://youtube.com/shorts/dGkNgaEfEls"],["Seated Banded Row", "https://youtube.com/shorts/4RaAMJ2z56Q"],["Élévation Latérale + Frontale", "https://youtube.com/shorts/skZ8FqRv_tc"]],
+  "u-w1-s1":[["Strict Pull Up", "https://youtube.com/shorts/mH1bxFbU_ro"],["Bridge Floor Press Double DB", "https://youtube.com/shorts/ji9k92Uyr8w"],["BB Strict Press", "https://youtube.com/shorts/3fFpYacwAdY"],["Video adattamento", "https://youtube.com/shorts/FQPTJ2hyyF0"],["Ring Row Foot Elevated", "https://youtube.com/shorts/5Eqkm2og2uU"],["KB Gorilla Row", "https://youtube.com/shorts/zI2-KT6OHtA"],["DB Biceps Curl (prise Marteau)", "https://youtube.com/shorts/Vrbn2kiW0bo"],["BB Skull Crusher", "https://youtube.com/shorts/dGkNgaEfEls"],["Seated Banded Row", "https://youtube.com/shorts/4RaAMJ2z56Q"],["Lateral + Front Raise Combo", "https://youtube.com/shorts/skZ8FqRv_tc"]],
   "u-w1-s2":[["Strict Pull Up", "https://youtube.com/shorts/mH1bxFbU_ro"],["Bridge Floor Press Double DB", "https://youtube.com/shorts/ji9k92Uyr8w"],["Video adattamento", "https://youtube.com/shorts/FQPTJ2hyyF0"],["DB Biceps Curl (prise Marteau)", "https://youtube.com/shorts/Vrbn2kiW0bo"],["BB Skull Crusher", "https://youtube.com/shorts/dGkNgaEfEls"],["Seated Banded Row", "https://youtube.com/shorts/4RaAMJ2z56Q"]],
   "u-w1-s3":[["BB Rowing", "https://youtube.com/shorts/ruWSd1yz_pY"],["Half Kneeling KB Strict Press", "https://youtube.com/shorts/_UhyX-AoqSI"],["Élévation Latérale Double DB + Bûcheron", "https://youtube.com/shorts/GsFRrEBB3TE"]],
-  "u-w2-s1":[["BB Strict Press", "https://youtube.com/shorts/3fFpYacwAdY"],["Half Kneeling KB Strict Press", "https://youtube.com/shorts/_UhyX-AoqSI"],["Ring Row Foot Elevated", "https://youtube.com/shorts/5Eqkm2og2uU"],["KB Gorilla Row", "https://youtube.com/shorts/zI2-KT6OHtA"],["Élévation Latérale Double DB + Bûcheron", "https://youtube.com/shorts/GsFRrEBB3TE"],["Élévation Latérale + Frontale", "https://youtube.com/shorts/skZ8FqRv_tc"]],
+  "u-w2-s1":[["BB Strict Press", "https://youtube.com/shorts/3fFpYacwAdY"],["Half Kneeling KB Strict Press", "https://youtube.com/shorts/_UhyX-AoqSI"],["Ring Row Foot Elevated", "https://youtube.com/shorts/5Eqkm2og2uU"],["KB Gorilla Row", "https://youtube.com/shorts/zI2-KT6OHtA"],["Élévation Latérale Double DB + Bûcheron", "https://youtube.com/shorts/GsFRrEBB3TE"],["Lateral + Front Raise Combo", "https://youtube.com/shorts/skZ8FqRv_tc"]],
   "u-w2-s2":[["Strict Pull Up", "https://youtube.com/shorts/mH1bxFbU_ro"],["Bridge Floor Press Double DB", "https://youtube.com/shorts/ji9k92Uyr8w"],["Video adattamento", "https://youtube.com/shorts/FQPTJ2hyyF0"],["DB Biceps Curl (prise Marteau)", "https://youtube.com/shorts/Vrbn2kiW0bo"],["BB Skull Crusher", "https://youtube.com/shorts/dGkNgaEfEls"],["Seated Banded Row", "https://youtube.com/shorts/4RaAMJ2z56Q"]],
   "u-w2-s3":[["BB Rowing", "https://youtube.com/shorts/ruWSd1yz_pY"],["Half Kneeling KB Strict Press", "https://youtube.com/shorts/_UhyX-AoqSI"],["Élévation Latérale Double DB + Bûcheron", "https://youtube.com/shorts/GsFRrEBB3TE"]],
   "u-w3-s1":[["BB Strict Press", "https://youtube.com/shorts/3fFpYacwAdY"],["Body Row", "https://youtu.be/ZgpFDcG4WAI"],["Rowing Double KB Pause", "https://youtube.com/shorts/Ll-gpGjaYSQ"],["Developpé Incliné Double DB", "https://youtube.com/shorts/96exusxzqo0"]],
@@ -2626,7 +2644,7 @@ function renderUpperDayDetail(){
      ${completionToggle("ub", currentUpperDay, "Upper Body · S"+d.week+" · Seduta "+d.sidx)}
    </div>`;
   wireLogInputs(wrap);
-  wireWeights(wrap);
+  wireWeights(wrap); wireVariants(wrap);
   wireCompletion(wrap, ()=>{ renderUpperDayDetail(); renderUpperPlates(); });
 }
 function renderUpperIntro(){
@@ -3118,6 +3136,52 @@ function wireWeights(root){
     });
   });
 }
+/* Varianti selezionabili per esercizio del programma (tendina come il peso) */
+const EX_VARIANTS={
+ "Superman Pull":["Superman T-Raise (a terra)","Prone Swimmer"],
+ "Bent-Over Dumbbell Row":["Single-Arm Dumbbell Row","Renegade Row (posizione plank)"],
+ "Single-Arm Dumbbell Row":["Bent-Over Dumbbell Row","Renegade Row (posizione plank)"],
+ "Renegade Row (posizione plank)":["Single-Arm Dumbbell Row","Bent-Over Dumbbell Row"],
+ "Dumbbell Floor Press":["Push-Up","Dumbbell Squeeze Press"],
+ "Dumbbell Squeeze Press":["Dumbbell Floor Press","Close-Grip Push-Up"],
+ "Push-Up":["Decline Push-Up (piedi rialzati)","Diamond Push-Up"],
+ "Dumbbell Rear Fly":["Reverse Snow Angel (a terra)","Prone T-Raise (corpo libero)"],
+ "Standing Dumbbell Bicep Curl":["Hammer Curl","Zottman Curl"],
+ "Hammer Curl":["Standing Dumbbell Bicep Curl","Cross-Body Hammer Curl"],
+ "Overhead Dumbbell Tricep Extension":["Dumbbell Skull Crusher (a terra)","Tricep Dip (corpo libero)"],
+ "Dumbbell Skull Crusher (a terra)":["Overhead Dumbbell Tricep Extension","Close-Grip Push-Up"],
+ "Dumbbell Goblet Squat":["Dumbbell Sumo Squat","Split Squat (corpo libero)"],
+ "Dumbbell Sumo Squat":["Dumbbell Goblet Squat","Cossack Squat (corpo libero)"],
+ "Dumbbell Romanian Deadlift":["Single-Leg RDL (corpo libero)","Dumbbell Sumo Deadlift"],
+ "Single-Leg Dumbbell Deadlift":["Dumbbell Romanian Deadlift"],
+ "Dumbbell Reverse Lunge":["Dumbbell Walking Lunge","Reverse Lunge (corpo libero)"],
+ "Dumbbell Glute Bridge":["Single-Leg Glute Bridge","Dumbbell Hip Thrust (a terra)"]
+};
+const _exVar={}; Object.keys(EX_VARIANTS).forEach(k=>{ _exVar[bNorm(k)]=EX_VARIANTS[k]; });
+function variantsFor(name){ return _exVar[bNorm(name)]||null; }
+function savedVariant(program, unitId, i){
+  const key=program+"|"+unitId+"|"+i+"|var";
+  return (store.data.var && store.data.var[key]) ? store.data.var[key] : "";
+}
+function variantSelect(program, unitId, i, name){
+  const vars=variantsFor(name); if(!vars||!vars.length) return "";
+  const key=program+"|"+unitId+"|"+i+"|var";
+  const saved=savedVariant(program,unitId,i);
+  const opts=`<option value="">${escAttr(name)} (originale)</option>`+vars.map(v=>`<option value="${escAttr(v)}"${v===saved?" selected":""}>${escAttr(v)}</option>`).join("");
+  return `<div class="ex-variant"><select data-vkey="${escAttr(key)}" data-orig="${escAttr(name)}" aria-label="Variante esercizio">${opts}</select></div>`;
+}
+function wireVariants(root){
+  root.querySelectorAll(".ex-variant select").forEach(sel=>{
+    sel.addEventListener("change", ()=>{
+      if(!store.data.var) store.data.var={};
+      const k=sel.getAttribute("data-vkey"), v=sel.value, orig=sel.getAttribute("data-orig")||"";
+      if(v) store.data.var[k]=v; else delete store.data.var[k];
+      store.save();
+      const td=sel.closest(".ex-name"); if(td){ const nm=td.querySelector(".ex-nm"); if(nm) nm.textContent=v||orig; }
+      if(typeof toast==="function") toast(v?"Variante impostata ✓":"Torna all'originale");
+    });
+  });
+}
 function timeField(program, unitId){
   const key=program+"|"+unitId+"|time";
   const saved=(store.data.db && store.data.db[key]) ? store.data.db[key] : "";
@@ -3223,6 +3287,27 @@ function programPct(prefix, total){
   Object.keys(store.data.done||{}).forEach(k=>{ if(k.indexOf(prefix)===0 && store.data.done[k]) n++; });
   return total? Math.min(100, Math.round(n/total*100)) : 0;
 }
+/* ---- Gesture del Costruttore: swipe orizzontale sul risultato = rigenera ---- */
+(function(){
+  let x0=0,y0=0,t0=0,on=false;
+  document.addEventListener("touchstart",e=>{
+    const res=e.target.closest && e.target.closest("#bResult");
+    on = !!res && e.touches.length===1 && e.touches[0].clientX>28;
+    if(on){ const t=e.touches[0]; x0=t.clientX; y0=t.clientY; t0=Date.now(); }
+  },{passive:true});
+  document.addEventListener("touchend",e=>{
+    if(!on) return; on=false;
+    const t=e.changedTouches[0], dx=t.clientX-x0, dy=t.clientY-y0;
+    if(Math.abs(dx)>70 && Math.abs(dy)<45 && Date.now()-t0<700){
+      if(typeof bSel!=="undefined" && bSel.size && typeof bGenerate==="function"){
+        bGenerate();
+        const r=document.getElementById("bResult");
+        if(r){ r.classList.remove("swiped"); void r.offsetWidth; r.classList.add("swiped"); }
+      }
+    }
+  },{passive:true});
+})();
+
 /* ---- Navigazione indietro + swipe dal bordo (mobile) ---- */
 function goBack(){ if(currentCategory==="home") return false; setCategory("home"); return true; }
 (function(){
@@ -3244,8 +3329,8 @@ const BUILD_EXTRA={
    ["Chest Fly su Panca","3 x 12","Panca"],["Chest Fly su Panca Inclinata","3 x 12","Panca"],["Dumbbell Pullover su Panca","3 x 12","Panca"],["Squeeze Press su Panca Inclinata","3 x 15","Panca"],
    ["Panca Piana Bilanciere","4 x 6-8","Panca"],["Panca Inclinata Bilanciere","4 x 8","Panca"],["Panca Declinata Bilanciere","4 x 10","Panca"],
    ["Bridge Floor Press Doppio DB","4 x 12"],["Plank-to-Push-Up","3 x 10"],["Walk Out Push-Up","3 x 10"],["Push-Up to Downward Dog","3 x 12"],
-   ["Développé Incliné Doppio DB","4 x 10"],
-   ["Landmine Press","4 x 10/lato","Bilanciere"],["Empty Bar Floor Press","3 x 15","Bilanciere"],
+   ["Double DB Incline Press (a terra)","4 x 10"],
+   ["Landmine Press","4 x 10/lato","Bilanciere"],
    ["Archer Push-Up","3 x 8/lato"],["Dumbbell Incline Chest Press (a terra)","4 x 12"],
    ["Barbell Bench Press","4 x 6-8","Bilanciere"],["Barbell Incline Bench Press","4 x 8","Bilanciere"],["Barbell Floor Press","4 x 8","Bilanciere"],
    ["Parallel Bar Dip (petto)","4 x 8-10","Parallele"],
@@ -3254,11 +3339,11 @@ const BUILD_EXTRA={
    ["Band Chest Press","3 x 15","Elastici"]],
  "Schiena":[
    ["Chest-Supported Row su Panca Inclinata","4 x 12","Panca"],["Single-Arm Row appoggiato alla Panca","4 x 10/lato","Panca"],["Prone Y-Raise su Panca Inclinata","3 x 15","Panca"],["Seal Row (petto sulla panca)","4 x 10","Panca"],
-   ["Body Row Pause","4 x 8"],["Bûcheron (woodchopper busto piegato)","4 x 10/lato"],["DB Pull Over Tempo","3 x 12"],["Élévation Busto Piegato","3 x 15"],
+   ["Body Row Pause","4 x 8"],["Bent-Over Woodchopper","4 x 10/lato"],["DB Pull Over Tempo","3 x 12"],["Bent-Over Raise","3 x 15"],
    ["Strict Pull Up","4 x 5-8","Sbarra"],["Pull Up Hold Top","3 x 20\"","Sbarra"],["Toes-to-Bar Grip Hang","3 x 30\"","Sbarra"],
    ["Double KB Pendlay Row","4 x 8","Kettlebell"],["KB Gorilla Row","4 x 10/lato","Kettlebell"],
    ["One Arm Ring Row","4 x 10/lato","Anelli"],["Ring Row Foot Elevated","4 x 8","Anelli"],
-   ["Tirage Horizontal Élastique (doppia contrazione)","3 x 15","Elastici"],["Banded Lat Pull Down","3 x 15","Elastici"],["Seated Banded Row","3 x 15","Elastici"],["Supination Banded Pull Apart","3 x 15","Elastici"],
+   ["Banded Horizontal Row (doppia contrazione)","3 x 15","Elastici"],["Banded Lat Pull Down","3 x 15","Elastici"],["Seated Banded Row","3 x 15","Elastici"],["Supination Banded Pull Apart","3 x 15","Elastici"],
    ["Dumbbell Pullover","3 x 12"],["Gorilla Row","4 x 10/lato"],["Inverted Row (barra bassa)","4 x 10"],
    ["Pull-Up","4 x 6-8","Sbarra"],["Neutral-Grip Pull-Up","4 x 8","Sbarra"],
    ["Barbell Bent-Over Row","4 x 8","Bilanciere"],["Pendlay Row","4 x 6","Bilanciere"],
@@ -3267,8 +3352,8 @@ const BUILD_EXTRA={
    ["Band Row","3 x 15","Elastici"],["Band Pull-Apart","3 x 15","Elastici"],["Band Lat Pulldown","3 x 15","Elastici"]],
  "Spalle":[
    ["Seated Shoulder Press su Panca","4 x 10","Panca"],["Seated Arnold Press su Panca","3 x 10","Panca"],["Incline Rear Delt Fly (petto sulla panca)","3 x 15","Panca"],["Seated Lateral Raise","3 x 15","Panca"],
-   ["Seated Arnold Press","4 x 10"],["Double DB Strict Press (pronazione)","4 x 8"],["Seated DB Élévation Frontale Alt.","3 x 12/lato"],["Élévation Latérale + Frontale","3 x 12"],["Brad Ford Press","3 x 12"],
-   ["BB Strict Press","4 x 6","Bilanciere"],["Landmine Lateral Raise","3 x 12/lato","Bilanciere"],
+   ["Seated Arnold Press","4 x 10"],["Double DB Strict Press (pronazione)","4 x 8"],["Seated DB Front Raise (alternato)","3 x 12/lato"],["Lateral + Front Raise Combo","3 x 12"],["Brad Ford Press","3 x 12"],
+   ["Landmine Lateral Raise","3 x 12/lato","Bilanciere"],
    ["Half Kneeling KB Strict Press","4 x 8/lato","Kettlebell"],["Z Press Doppio KB","3 x 8","Kettlebell"],
    ["Ring Support Hold","3 x 20\"","Anelli"],
    ["Dumbbell Lateral Raise","4 x 15"],["Dumbbell Front Raise","3 x 12"],["Dumbbell Arnold Press","3 x 10"],["Dumbbell Seated Shoulder Press","4 x 10"],["Pike Push-Up","4 x 8"],
@@ -3279,7 +3364,6 @@ const BUILD_EXTRA={
  "Bicipiti":[
    ["Incline Dumbbell Curl su Panca","3 x 12","Panca"],["Preacher Curl (schienale panca)","3 x 12","Panca"],["Seated Alternating Curl","3 x 12/lato","Panca"],["Spider Curl su Panca Inclinata","3 x 12","Panca"],
    ["21s Bicep Curl (manubrio leggero)","3 x 21"],["DB Biceps Curl (presa martello)","4 x 12"],
-   ["BB Biceps Curl","4 x 10","Bilanciere"],
    ["KB Biceps Curl","3 x 12","Kettlebell"],
    ["Ring Curl","3 x 10","Anelli"],
    ["Incline Dumbbell Curl","3 x 12"],["Dumbbell Spider Curl","3 x 12"],
@@ -3292,7 +3376,6 @@ const BUILD_EXTRA={
    ["Skull Crusher su Panca","4 x 12","Panca"],["Seated Overhead Tricep Extension","3 x 12","Panca"],["Close-Grip Bench Press","4 x 8","Panca"],["Bench Dip (piedi rialzati)","3 x 15","Panca"],["Tate Press su Panca","3 x 12","Panca"],
    ["KB Triceps Extension","3 x 12","Kettlebell"],
    ["Banded Triceps Extension","3 x 15","Elastici"],
-   ["BB Skull Crusher (bilanciere vuoto)","3 x 15","Bilanciere"],
    ["Bench Dip (piedi a terra)","4 x 15"],["Close-Grip Dumbbell Press (a terra)","4 x 12"],
    ["Barbell Close-Grip Bench Press","4 x 8","Bilanciere"],["Barbell Skull Crusher","3 x 10","Bilanciere"],
    ["Parallel Bar Dip (tricipiti)","4 x 8-10","Parallele"],
@@ -3331,7 +3414,88 @@ const BUILD_EXTRA={
    ["Pallof Press","3 x 12/lato","Elastici"],["Pallof Press Hold","3 x 20\"/lato","Elastici"],["Band Dead Bug","3 x 12/lato","Elastici"]]
 };
 Object.keys(BUILD_EXTRA).forEach(g=>{ if(BUILD_LIB[g]) BUILD_LIB[g]=BUILD_LIB[g].concat(BUILD_EXTRA[g]); });
-const EQUIP_ORDER=["Panca","Bilanciere","Sbarra","Parallele","Anelli","Kettlebell","Elastici"];
+/* Varianti a CORPO LIBERO (nessun attrezzo = sempre disponibili), in stile Superman Pull */
+const BUILD_BW={
+ "Petto":[
+   ["Hindu Push-Up","3 x 10"],["Spiderman Push-Up","3 x 8/lato"],["Pseudo Planche Push-Up","3 x 8"],["Explosive Push-Up (stacco mani)","4 x 6"]],
+ "Schiena":[
+   ["Superman Y-Raise (a terra)","3 x 15"],["Superman T-Raise (a terra)","3 x 15"],["Superman W-Raise (a terra)","3 x 15"],["Reverse Snow Angel (a terra)","3 x 15"],["Prone Swimmer","3 x 20"],["Prone Cobra Hold","3 x 30\""],["Scapular Push-Up","3 x 12"]],
+ "Spalle":[
+   ["Elevated Pike Push-Up (piedi rialzati)","3 x 8"],["Wall Walk","3 x 4"],["Wall Handstand Hold","3 x 20\""],["Bear Crawl Hold","3 x 30\""]],
+ "Bicipiti":[
+   ["Inverted Curl (bordo tavolo)","3 x 10"],["Curl Isometrico ad Autoresistenza","3 x 20\""]],
+ "Tricipiti":[
+   ["Bodyweight Skull Crusher (a terra)","3 x 10"],["Sphinx Push-Up","3 x 10"],["Tiger Bend Push-Up","3 x 6"]],
+ "Gambe":[
+   ["Split Squat (corpo libero)","3 x 12/lato"],["Reverse Lunge (corpo libero)","3 x 12/lato"],["Jump Squat","4 x 12"],["Pistol Squat (assistito)","3 x 6/lato"],["Shrimp Squat (assistito)","3 x 6/lato"],["Squat Isometrico (pausa in basso)","3 x 10"],["Wall Sit March","3 x 30\""]],
+ "Femorali & Glutei":[
+   ["Marching Glute Bridge","3 x 20"],["Single-Leg RDL (corpo libero)","3 x 10/lato"],["Sliding Leg Curl (a terra)","3 x 12"],["Reverse Hyperextension (a terra)","3 x 15"],["Hip Thrust (corpo libero, spalle a terra)","3 x 20"]]
+};
+Object.keys(BUILD_BW).forEach(g=>{ if(BUILD_LIB[g]) BUILD_LIB[g]=BUILD_LIB[g].concat(BUILD_BW[g]); });
+/* Rimuove solo i veri doppioni: stesso esercizio E stessa attrezzatura.
+   Le varianti con attrezzi diversi (es. squat a corpo libero / bilanciere / KB) restano. */
+function bNorm(n){ return String(n).toLowerCase()
+  .normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+  .replace(/\(.*?\)/g," ")
+  .replace(/[^a-z0-9]+/g," ").trim(); }
+Object.keys(BUILD_LIB).forEach(g=>{
+  const seen=new Map();
+  BUILD_LIB[g].forEach(ex=>{
+    const k=(ex[2]||"base")+"::"+bNorm(ex[0]); if(!k) return;
+    if(!seen.has(k)) seen.set(k,ex);
+  });
+  BUILD_LIB[g]=[...seen.values()];
+});
+const BUILD_CUES={"Dumbbell Floor Press":"2\\\" discesa controllata, 1\\\" pausa in alto","Bent-Over Dumbbell Row":"2\\\" discesa controllata, 1\\\" pausa in alto","Wide Push-Up":"Mani più larghe delle spalle, range completo, blocco e pausa in alto","Dumbbell Rear Fly":"2\\\" discesa controllata, 1\\\" pausa in alto","Push-Up":"Mani alla larghezza delle spalle, range completo, blocco e pausa in alto","Superman Pull":"Contrai glutei e schiena alta","1' — Jump Squats":"Atterraggio morbido, petto alto","2' — Mountain Climbers":"Mantieni i fianchi allineati","3' — Dumbbell Thrusters (leggeri)":"Squat a spinta, un movimento fluido","4' — Plank Shoulder Taps":"Minimizza l'oscillazione dei fianchi","Standing Dumbbell Bicep Curl":"Niente slancio, gomiti fissi","Overhead Dumbbell Tricep Extension":"Gomiti stretti, stiramento completo in basso","Hammer Curl":"Presa neutra per tutto il movimento","Dumbbell Skull Crusher (a terra)":"Il pavimento limita il range, controllato","Concentration Half Curl":"Gomito fisso al fianco, tensione costante, 2\\\" squeeze in alto","Standing Tricep Kickback":"Schiena piatta, gomito resta alto","1' — Burpees":"In piedi, petto a terra, ritorno alla posizione iniziale","2' — Jump Lunge":"Atterraggio morbido","3' — Dumbbell Swings (leggeri)":"L'hip hinge guida lo swing","Dumbbell Goblet Squat":"Petto alto, siediti tra i talloni","Dumbbell Romanian Deadlift":"Hinge sui fianchi, ginocchia morbide","Dumbbell Reverse Lunge":"Il ginocchio anteriore non supera la punta del piede","Dumbbell Glute Bridge":"Contrai i glutei in alto","Dumbbell Sumo Squat":"Stance larga, punte verso l'esterno","Single-Leg Dumbbell Deadlift":"Peso leggero, equilibrio prima di tutto","2' — Dumbbell Snatch (leggero, alternato)":"Una trazione fluida, non una curl","3' — Walk Out Push-Up":"Fianchi bassi, core attivo","Dumbbell Squeeze Press":"Premi i manubri l'uno contro l'altro per tutto il movimento, squeeze in alto","Single-Arm Dumbbell Row":"Schiena piatta, controlla la fase negativa","Incline Push-Up (mani rialzate)":"Range completo, pausa in alto","Dumbbell Rear Flys":"Movimento controllato, squeeze in alto","Decline Push-Up (piedi rialzati)":"Variante più difficile per il petto, blocco completo","Renegade Row (posizione plank)":"Core attivo, minimizza la rotazione dei fianchi","1' — Jump Lunges":"Atterraggio morbido, controlla lo stop","2' — Bicycles":"Ginocchio verso gomito","3' — Thruster":"Esplosivo in salita, controllato in discesa","Alternating Dumbbell Curl":"Un braccio alla volta, controlla la discesa","Close-Grip Push-Up":"Gomiti stretti al corpo","Cross-Body Hammer Curl":"Curl verso la spalla opposta","Diamond Push-Up":"Mani a diamante, gomiti stretti","Dumbbell Half Curl":"Gomiti fissi, parti a 90°, palmi in su, squeeze in alto","Single-Arm Overhead Tricep Extension":"Il gomito resta vicino alla testa","1' — Burpee to Broad Jump":"Salto in avanti esplosivo","2' — Dumbbell Step-Back Lunge":"Passo indietro controllato","3' — Mountain Climbers":"Mantieni i fianchi allineati","Dumbbell Sumo Deadlift":"Stance larga, hinge sui fianchi","Bodyweight Curtsy Lunge":"Passo dietro e incrociato, controlla il ginocchio","Dumbbell Walking Lunge":"Passo lungo, controlla la discesa","Single-Leg Glute Bridge":"Squeeze del gluteo in alto, fianchi livellati","Dumbbell Front Squat (goblet hold)":"Gomiti alti, petto alto","2' — Dumbbell Bent-Over Row":"Schiena piatta, squeeze in alto","Dumbbell Chest Fly (a terra)":"Leggera flessione del gomito, controlla lo stiramento","Superman Pulls":"2\\\" pausa in alto, scapole strette","Staggered Push-Up":"Una mano avanti, alterna ad ogni serie","Dumbbell Deadlift":"Peso leggero, contrai la schiena alta in alto","T Push-Up":"Push-up standard, in alto ruota completamente, braccio in linea con le spalle","Dumbbell Deadstop Row (a terra)":"Pausa completa a terra tra le ripetizioni","1' — Devil's Press":"Peso leggero, obiettivo è la meccanica","2' — Wide Push-Up":"Mani più larghe delle spalle","4' — V-Up":"Lento e controllato","Reverse Grip Dumbbell Curl":"Palmi in giù, tensione controllata","Tricep Dip (corpo libero, sedia/pavimento)":"Gomiti indietro in linea retta","Seated Curl":"Curl con palmi in su, ruota, scendi con palmi in giù","1' — Burpee":"Da terra a in piedi","2' — Dumbbell Snatch":"Da terra a sopra la testa in un movimento, peso gestibile","Dumbbell Back Squat":"Petto alto","Single-Leg Romanian Deadlift (manubrio)":"Equilibrio prima di tutto, peso leggero","Lateral Lunge (manubrio)":"Siediti nella gamba di lavoro","1' — Squat Jump to Reach":"Reach in alto, atterraggio morbido","2' — Dumbbell Swings (leggeri)":"L'hip hinge guida lo swing","3' — Pike Push-Ups":"Fianchi alti, focus sulle spalle","Dumbbell Floor Press (presa neutra)":"Palmi uno di fronte all'altro, tempo controllato","Renegade Row (manubri moderati)":"Core attivo, minimizza la rotazione","Prone Y-Raise (manubri leggeri)":"Pollici in su, squeeze schiena alta","Push-Up (standard)":"Range completo, blocco in alto","Deadlift (manubri pesanti)":"Fianchi indietro, schiena piatta, manubri vicini al corpo","2' — Hand Dumbbell Snatch":"Da terra a sopra la testa in un movimento","Reverse Hand Push-up (target bicipiti)":"Mani rivolte verso i piedi, il più possibile","Tricep Dip (corpo libero)":"Gomiti indietro in linea retta","3' — Skater Hops (laterali)":"Atterraggio morbido, controlla lo stop","4' — Bicycle Crunch":"Lento e controllato","1' — Devils Press":"Push-up con manubri, da in piedi a una trazione fluida sopra la testa","2' — Walk Out Push-Up":"Fianchi bassi, core attivo","1' — Dumbbell Thrusters (leggeri)":"Squat a spinta, movimento fluido","Zottman Curl":"Curl, ruota, scendi controllato","1' — Dumbbell Man-Makers":"Row, push-up, squat, press","2' — Jump Lunges":"Atterraggio morbido, cambia gamba a mezz'aria","3' — Trunk Twists":"Ruota il busto, non solo il peso da un lato all'altro","Squat Pulses":"Parti appena sopra il parallelo, pulsa sotto il parallelo e ritorna","3' — Shoulder Press (leggero)":"—","2' — Plank Shoulder Taps":"Spalle sopra i polsi, core stretto","Half Curl":"2\\\" pausa a 90°, 2\\\" squeeze in alto","2' — Man Makers":"Petto basso, core stretto, row, salto, spinta","3' — Weighted Toe Touches":"Gambe in aria, un manubrio con entrambe le mani verso i piedi","Single-Leg Romanian Deadlift":"Lento e controllato, equilibrio prima di tutto","Dumbbell Hip Thrust (a terra)":"2\\\" squeeze in cima ad ogni rip","2' — Dumbbell Swings (leggero-moderato)":"Aumenta il peso (se non disponibile, aumenta le rip di 5-8), l'hip hinge guida lo swing","Renegade Row":"Sale da 8/lato — core attivo, minimizza la rotazione","2' — Devils Press":"Resta stretto per tutto il movimento, finisci forte sopra la testa, non affrettare la rip","3' — Bicycle Crunch":"Lento e controllato","4' — Mountain Climbers":"Mantieni i fianchi allineati","2' — Skater Hops":"Atterraggio morbido, controlla lo stop","3' — Dumbbell Step-Back Lunge":"Passo indietro controllato","1' — Dumbbell Snatch (alternato)":"Una trazione fluida, non una curl","2' — Dumbbell Man-Makers":"Row, push-up, squat, press — un unico flusso"};
+Object.assign(BUILD_CUES,{
+ "Superman Y-Raise (a terra)":"Braccia a Y, pollici in su, pausa 2 sec in alto, scapole basse",
+ "Superman T-Raise (a terra)":"Braccia a T, spremi le scapole, petto leggermente su",
+ "Superman W-Raise (a terra)":"Gomiti a W, tirali verso i fianchi, pausa in alto",
+ "Reverse Snow Angel (a terra)":"Braccia tese, dai fianchi fin sopra la testa restando a terra",
+ "Prone Swimmer":"Alterna braccio e gamba opposti, core attivo, niente slancio",
+ "Prone Cobra Hold":"Petto su, palmi verso l'alto, glutei e schiena alta contratti",
+ "Scapular Push-Up":"Braccia tese, muovi solo le scapole (protrai e retrai)",
+ "Hindu Push-Up":"Dalla V scendi in avanti e risali a cobra, un flusso unico",
+ "Spiderman Push-Up":"Porta il ginocchio verso il gomito ad ogni discesa",
+ "Pseudo Planche Push-Up":"Mani basse verso i fianchi, spalle in avanti sopra le mani",
+ "Explosive Push-Up (stacco mani)":"Spingi forte, mani via da terra, atterra morbido",
+ "Elevated Pike Push-Up (piedi rialzati)":"Fianchi alti, testa tra le mani, focus spalle",
+ "Wall Walk":"Cammina verso il muro fino alla verticale, poi torna giù controllato",
+ "Wall Handstand Hold":"Corpo teso, spingi sulle spalle, sguardo tra le mani",
+ "Bear Crawl Hold":"Ginocchia due dita da terra, schiena piatta, respira",
+ "Inverted Curl (bordo tavolo)":"Corpo teso, tira il petto verso il bordo usando i bicipiti",
+ "Curl Isometrico ad Autoresistenza":"Spingi una mano contro l'altra, tieni la tensione massima",
+ "Bodyweight Skull Crusher (a terra)":"Fletti solo i gomiti, tenendoli alti e stretti",
+ "Sphinx Push-Up":"Dagli avambracci alle mani distendendo i tricipiti",
+ "Tiger Bend Push-Up":"Scendi sugli avambracci e risali distendendo, gomiti stretti",
+ "Split Squat (corpo libero)":"Busto dritto, scendi in verticale, spingi col tallone",
+ "Reverse Lunge (corpo libero)":"Passo indietro controllato, ginocchio anteriore stabile",
+ "Jump Squat":"Squat pieno, salto esplosivo, atterraggio morbido",
+ "Pistol Squat (assistito)":"Tieniti a un supporto, scendi controllato su una gamba",
+ "Shrimp Squat (assistito)":"Trattieni la caviglia dietro, scendi controllato con un appoggio",
+ "Squat Isometrico (pausa in basso)":"Pausa 3 sec sotto il parallelo ad ogni ripetizione",
+ "Wall Sit March":"Cosce parallele al suolo, alterna il sollevamento dei piedi",
+ "Marching Glute Bridge":"Bacino alto e fermo, alterna le ginocchia senza cedere",
+ "Single-Leg RDL (corpo libero)":"Hinge su una gamba, schiena neutra, equilibrio prima di tutto",
+ "Sliding Leg Curl (a terra)":"Talloni su superficie liscia, bacino alto, tira coi femorali",
+ "Reverse Hyperextension (a terra)":"Solleva le gambe contraendo i glutei, senza inarcare i lombari",
+ "Hip Thrust (corpo libero, spalle a terra)":"Contrazione 2 sec in alto, mento leggermente in dentro"
+});
+function cueFor(ex){
+  const n=ex[0]; if(BUILD_CUES[n]) return BUILD_CUES[n];
+  const s=n.toLowerCase(), tag=ex[2]||"";
+  if(/carry/.test(s)) return "Cammina, non correre. Busto dritto, scapole attive";
+  if(/hold|plank|l-sit|hollow|arch|support/.test(s)) return "Mantieni la posizione, addome contratto, respira";
+  if(/curl|extension|kickback|fly|raise|pull-apart|push-down/.test(s)) return "Movimento controllato, niente slancio";
+  if(/pull-up|chin-up|row|pulldown|pullover/.test(s)) return "Tira con i gomiti, pausa in contrazione, discesa controllata";
+  if(/push-up|dip|press|panca/.test(s)) return "2\" discesa controllata, 1\" pausa in alto";
+  if(/squat|lunge|step-up|split squat|box squat/.test(s)) return "Ginocchio in linea col piede, spingi col tallone";
+  if(/deadlift|hip thrust|bridge|good morning|nordic|leg curl/.test(s)) return "Anca indietro, schiena neutra, blocca in alto";
+  if(/crunch|sit-up|v-up|raise|twist|windscreen|knee tuck|bicycle|dead bug/.test(s)) return "Lombari a terra, movimento lento e controllato";
+  if(tag==="Elastici") return "Mantieni tensione sull'elastico anche in ritorno";
+  return "Tecnica pulita, 1–2 rip di margine";
+}
+const EQUIP_ORDER=["Manubri","Panca","Bilanciere","Sbarra","Parallele","Anelli","Kettlebell","Elastici"];
 /* Consigli di peso per attrezzo */
 const BAR_RANGES={compound_lower:{Principiante:"40–60",Intermedio:"60–90",Avanzato:"90–130"},compound_upper:{Principiante:"30–45",Intermedio:"45–65",Avanzato:"65–95"},isolation:{Principiante:"15–25",Intermedio:"25–40",Avanzato:"40–55"}};
 const KB_RANGES={compound_lower:{Principiante:"12–20",Intermedio:"20–28",Avanzato:"28–40"},compound_upper:{Principiante:"8–16",Intermedio:"16–24",Avanzato:"24–32"},isolation:{Principiante:"8–12",Intermedio:"12–16",Avanzato:"16–24"}};
@@ -3346,10 +3510,20 @@ function exClass(name, tag){
   if(/push-up|dip|superman|curtsy|squat pulses|pull-up|chin-up|bodyweight|corpo libero|wall sit|nordic|inverted row|cossack|pike|archer|pseudo|hollow|plank|frog pump|ring |parallel bar/.test(s)) return "bw";
   return "db";
 }
-function exAvail(ex){ const eq=ex[2]; return !eq || bEquip.has(eq); }
-let bSel=new Set(), bCount=2, bLevel="Intermedio", bRef=null, bEquip=new Set(), bTempo="Libero", bSession=null;
-try{ const s=JSON.parse(localStorage.getItem("stdBuilder_v1")); if(s){ bSel=new Set(s.sel||[]); bCount=s.count||2; bLevel=s.level||"Intermedio"; bRef=s.ref||null; bEquip=new Set(s.equip||[]); bTempo=s.tempo||"Libero"; } }catch(e){}
-function bSave(){ try{ localStorage.setItem("stdBuilder_v1", JSON.stringify({sel:[...bSel],count:bCount,level:bLevel,ref:bRef,equip:[...bEquip],tempo:bTempo})); }catch(e){} }
+function isBW(n){ return /push-?up|plank|hollow|arch|superman|pistol|shrimp|wall sit|wall walk|handstand|bear crawl|scapular|corpo libero|bodyweight|nordic|frog pump|good mornings|squat thrust|mountain climber|sit-?up|v-?up|tuck up|crunch|leg raise|knee raise|russian twist|snow angel|swimmer|cobra|hindu|spiderman|pseudo planche|sphinx|tiger bend|autoresistenza|marching glute|jump squat|isometrico|curtsy|dip \(corpo|bench dip|inverted curl|inverted row|body row|l-sit|dead bug|shoulder tap|toes to bar|windscreen|hip dips|walkout|walk out|carry|farmer|suitcase|squat pulses|lateral lunge|reverse lunge \(corpo|split squat \(corpo|glute bridge \(corpo|single-leg glute bridge|reverse hyper|sliding leg curl|prone|scissor|bottoms up|side lift|floor leg/i.test(String(n).toLowerCase()); }
+function exAvail(ex){ const eq=ex[2]; if(eq) return bEquip.has(eq); return isBW(ex[0]) || bEquip.has("Manubri"); }
+let bSel=new Set(), bCount=2, bLevel="Intermedio", bRef=null, bEquip=new Set(), bTempo="Libero", bGoal="Ipertrofia", bStruct="Alternato", bSuperset=false, bSession=null;
+function bLoadState(){
+  let s = (store.data && store.data.builder) ? store.data.builder : null;
+  if(!s){ try{ const old=JSON.parse(localStorage.getItem("stdBuilder_v1")); if(old) s=old; }catch(e){} }  /* migrazione dal vecchio formato */
+  s = s || {};
+  bSel=new Set(s.sel||[]); bCount=s.count||2; bLevel=s.level||"Intermedio"; bRef=(s.ref??null); bEquip=new Set(s.equip||[]); bTempo=s.tempo||"Libero"; bGoal=s.goal||"Ipertrofia"; bStruct=s.struct||"Alternato"; bSuperset=!!s.superset; bSession=null;
+  if(s.equipV!==2) bEquip.add("Manubri");   /* default/migrazione: manubri attivi finché non li togli */
+  if(bStruct==="Superset"){ bStruct="Alternato"; bSuperset=true; }
+}
+function bResetState(){ bSel=new Set(); bCount=2; bLevel="Intermedio"; bRef=null; bEquip=new Set(["Manubri"]); bTempo="Libero"; bGoal="Ipertrofia"; bStruct="Alternato"; bSuperset=false; bSession=null; }
+bLoadState();
+function bSave(){ store.data.builder={sel:[...bSel],count:bCount,level:bLevel,ref:bRef,equip:[...bEquip],equipV:2,tempo:bTempo,goal:bGoal,struct:bStruct,superset:bSuperset}; store.save(); }
 /* Consiglio di peso (manubri) per tipo di esercizio e livello */
 const LOAD_RANGES={
   compound_lower:{Principiante:"10–16",Intermedio:"16–24",Avanzato:"24–34"},
@@ -3394,10 +3568,61 @@ function renderCountSeg(){
   wrap.innerHTML=[1,2,3].map(n=>`<button type="button" class="build-chip${n===bCount?" on":""}" data-n="${n}">${n}</button>`).join("");
   wrap.querySelectorAll(".build-chip").forEach(b=>b.onclick=()=>{ bCount=parseInt(b.dataset.n,10); bSave(); renderCountSeg(); if(bSel.size) bGenerate(); });
 }
-const TEMPO_OPTS=["Libero","2-1","3-1","3-0-1","4-0-1"];
-function schemeWithTempo(s){ return (bTempo && bTempo!=="Libero") ? s+" · "+bTempo : s; }
+/* Schema serie x rip in base all'obiettivo e al tipo di esercizio */
+function isTimed(s){ return /"|sec|m\/lato|m$|\bm\b/.test(s); }
+function unilateralSuffix(s){ return /\/lato/.test(s) ? "/lato" : ""; }
+function schemeForGoal(ex){
+  const orig=ex[1];
+  if(bGoal==="Libero") return orig;
+  if(isTimed(orig) && !/x\s*\d/.test(orig)) return orig;      // hold/carry: lascia com'è
+  const t=loadType(ex[0]); const suf=unilateralSuffix(orig);
+  if(t==="core") return orig;                                    // core: schema originale
+  const big=/squat|deadlift|press|panca|row|pull-up|chin-up|hip thrust|lunge|dip/.test(ex[0].toLowerCase());
+  if(bGoal==="Forza")      return big ? `5 x 5${suf}` : `3 x 6-8${suf}`;
+  /* Ipertrofia */         return big ? `4 x 8-10${suf}` : `3 x 12-15${suf}`;
+}
+const GOAL_OPTS=["Ipertrofia","Forza","Libero"];
+const STRUCT_OPTS=["Alternato","A blocchi"];
+function renderGoalSeg(){
+  const w=document.getElementById("bGoalSeg"); if(!w) return;
+  w.innerHTML=GOAL_OPTS.map(g=>`<button type="button" class="build-chip${g===bGoal?" on":""}" data-g="${g}">${g}</button>`).join("");
+  w.querySelectorAll(".build-chip").forEach(b=>b.onclick=()=>{ bGoal=b.dataset.g; bSave(); renderGoalSeg(); renderBuilderResult(); });
+}
+function renderStructSeg(){
+  const w=document.getElementById("bStructSeg"); if(!w) return;
+  w.innerHTML=STRUCT_OPTS.map(s=>`<button type="button" class="build-chip${s===bStruct?" on":""}" data-s="${s}">${s}</button>`).join("");
+  w.querySelectorAll(".build-chip").forEach(b=>b.onclick=()=>{ bStruct=b.dataset.s; bSave(); renderStructSeg(); renderBuilderResult(); });
+}
+function renderSupersetSeg(){
+  const w=document.getElementById("bSupersetSeg"); if(!w) return;
+  const opts=[["0","No"],["1","Sì"]];
+  w.innerHTML=opts.map(([v,l])=>`<button type="button" class="build-chip${((v==="1")===bSuperset)?" on":""}" data-ss="${v}">${l}</button>`).join("");
+  w.querySelectorAll(".build-chip").forEach(b=>b.onclick=()=>{ bSuperset=(b.dataset.ss==="1"); bSave(); renderSupersetSeg(); renderBuilderResult(); });
+}
+const TEMPO_OPTS=["Libero","2-1","3-1"];
+function schemeWithTempo(s){ return (bTempo && bTempo!=="Libero" && !isTimed(s)) ? s+" · "+bTempo : s; }
+function recForGoal(ex){
+  const t=loadType(ex[0]);
+  if(t==="core") return null;
+  if(isTimed(ex[1]) && !/x\s*\d/.test(ex[1])) return "rec. 45-60\"";  // hold/carry
+  const big=/squat|deadlift|press|panca|row|pull-up|chin-up|hip thrust|lunge|dip/.test(ex[0].toLowerCase());
+  if(bGoal==="Forza")      return big ? "rec. 3'"   : "rec. 2'";
+  if(bGoal==="Ipertrofia") return big ? "rec. 2'"   : "rec. 90\"";
+  /* Libero */             return big ? "rec. 2-3'" : "rec. 1-2'";
+}
+function rirFor(ex){
+  const t=loadType(ex[0]);
+  if(t==="core") return null;
+  if(isTimed(ex[1]) && !/x\s*\d/.test(ex[1])) return null;  // hold/carry
+  const big=/squat|deadlift|press|panca|row|pull-up|chin-up|hip thrust|lunge|dip/.test(ex[0].toLowerCase());
+  if(bGoal==="Forza")      return big ? "2–3 RIR" : "1–2 RIR";
+  if(bGoal==="Ipertrofia") return big ? "1–2 RIR" : "0–1 RIR";
+  /* Libero */             return "1–3 RIR";
+}
+function schemeText(ex){ return [schemeWithTempo(schemeForGoal(ex)), rirFor(ex), recForGoal(ex)].filter(Boolean).join(" · "); }
 function renderTempoSeg(){
   const wrap=document.getElementById("bTempoSeg"); if(!wrap) return;
+  if(!TEMPO_OPTS.includes(bTempo)){ bTempo="Libero"; bSave(); }
   wrap.innerHTML=TEMPO_OPTS.map(t=>`<button type="button" class="build-chip${t===bTempo?" on":""}" data-t="${t}">${t}</button>`).join("");
   wrap.querySelectorAll(".build-chip").forEach(b=>b.onclick=()=>{ bTempo=b.dataset.t; bSave(); renderTempoSeg(); renderBuilderResult(); });
 }
@@ -3411,26 +3636,136 @@ function renderLevelSeg(){
   wrap.innerHTML=["Principiante","Intermedio","Avanzato"].map(l=>`<button type="button" class="build-chip${l===bLevel?" on":""}" data-l="${l}">${l}</button>`).join("");
   wrap.querySelectorAll(".build-chip").forEach(b=>b.onclick=()=>{ bLevel=b.dataset.l; bSave(); renderLevelSeg(); renderBuilderResult(); });
 }
+function famKey(name){
+  const s=String(name).toLowerCase().replace(/\(.*?\)/g," ");
+  if(/skull crusher|tate press/.test(s)) return "skullcrusher";
+  if(/close.?grip.*(bench|press)|jm press/.test(s)) return "cgpress";
+  if(/curl/.test(s)) return "curl";
+  if(/extension|kickback|push ?down|press ?down/.test(s)) return "triext";
+  if(/\bfly\b|flys/.test(s)) return "fly";
+  if(/lateral raise/.test(s)) return "latraise";
+  if(/front raise|y-raise|t-raise|w-raise|rear|reverse snow|swimmer|cobra|face ?pull/.test(s)) return "rearraise";
+  if(/pike|overhead press|strict press|arnold|shoulder press|z press|landmine press|upright row|handstand|wall walk/.test(s)) return "shoulder";
+  if(/bench|floor press|incline|decline|push-?up|chest press|squeeze/.test(s)) return "horizpress";
+  if(/\bdip\b/.test(s)) return "dip";
+  if(/row|pull-?up|chin-?up|pulldown|superman|scap/.test(s)) return "pull";
+  if(/deadlift|\brdl\b|good morning|hip hinge/.test(s)) return "hinge";
+  if(/hip thrust|glute bridge/.test(s)) return "bridge";
+  if(/lunge|split squat|step-?up|step up/.test(s)) return "lunge";
+  if(/squat|wall sit/.test(s)) return "squat";
+  return "mv:"+s.replace(/[^a-z0-9]+/g," ").trim();
+}
+function pickFinisher(){
+  const groups=BUILD_ORDER.filter(g=>g!=="Core" && Array.isArray(bSession[g]) && bSession[g].length);
+  if(!groups.length) return null;
+  const usedNames=new Set(), usedFam=new Set();
+  groups.forEach(g=>bSession[g].forEach(e=>{ usedNames.add(e[0]); usedFam.add(famKey(e[0])); }));
+  const isoRe=/fly|curl|extension|skull crusher|kickback|raise|pulse|crunch|squeeze|shrug|face ?pull|hold|dip|pump/i;
+  /* candidati: movimento DIVERSO da tutti quelli già presenti nel corpo */
+  let cand=[];
+  groups.forEach(g=>{ BUILD_LIB[g].filter(exAvail).forEach(ex=>{ if(!usedNames.has(ex[0]) && !usedFam.has(famKey(ex[0]))) cand.push({g:g,ex:ex,fam:famKey(ex[0])}); }); });
+  if(cand.length<2) return null;   /* niente finisher se non ci sono 2 movimenti nuovi */
+  const isoCand=cand.filter(c=>isoRe.test(c.ex[0]));
+  const pool=bShuffle(isoCand.length>=2?isoCand:cand);
+  const a=pool[0];
+  const b=pool.find(c=>c.g!==a.g && c.fam!==a.fam) || pool.find(c=>c.fam!==a.fam);
+  if(!b) return null;
+  return [[a.g,a.ex],[b.g,b.ex]];
+}
 function bGenerate(){
   bSession={};
-  [...bSel].sort((a,b)=>BUILD_ORDER.indexOf(a)-BUILD_ORDER.indexOf(b)).forEach(g=>{ const pool=BUILD_LIB[g].filter(exAvail); bSession[g]=bShuffle(pool).slice(0,Math.min(bCount,pool.length)); });
+  [...bSel].sort((a,b)=>BUILD_ORDER.indexOf(a)-BUILD_ORDER.indexOf(b)).forEach(g=>{
+    const pool=BUILD_LIB[g].filter(exAvail);
+    let chosen;
+    if(bEquip.size){
+      const isPri=ex=> (ex[2] && bEquip.has(ex[2])) || (!ex[2] && bEquip.has("Manubri") && !isBW(ex[0]));
+      const withEquip=bShuffle(pool.filter(isPri));           /* attrezzo selezionato (incl. manubri) */
+      const base=bShuffle(pool.filter(ex=>!isPri(ex)));       /* corpo libero di riempimento */
+      chosen=withEquip.concat(base).slice(0, Math.min(bCount, pool.length));
+    } else {
+      chosen=bShuffle(pool).slice(0, Math.min(bCount, pool.length));
+    }
+    bSession[g]=chosen;
+  });
   bSave(); renderBuilderResult();
+}
+function bGuidance(){
+  let rows;
+  if(bGoal==="Ipertrofia"){
+    rows=[
+      ["Vicinanza al cedimento","fermati a 1–2 ripetizioni dal cedimento sui multiarticolari; sugli isolamenti puoi spingerti a 0–1. È lo stimolo principale per la crescita."],
+      ["Progressione","doppia progressione: resta nel range di ripetizioni e, quando lo completi su tutte le serie con la forma pulita, aumenta il carico (~+1–2,5 kg) e riparti in basso."],
+      ["Esecuzione","eccentrica controllata (2–3\"), ampiezza completa: conta il tempo sotto tensione, non lo slancio."],
+      ["Volume settimanale","punta a ~10–20 serie efficaci per gruppo muscolare a settimana, distribuite su più sedute."]
+    ];
+  } else if(bGoal==="Forza"){
+    rows=[
+      ["Vicinanza al cedimento","tieni 2–3 ripetizioni di margine sui fondamentali mantenendo la velocità del bilanciere; evita il cedimento tecnico."],
+      ["Progressione","sovraccarico sul carico: quando completi tutte le serie e ripetizioni pulite, aumenta il peso alla seduta successiva."],
+      ["Recupero","2–3' pieni sui fondamentali: la forza si esprime a sistema nervoso recuperato."],
+      ["Focus","carico alto, poche ripetizioni, tecnica impeccabile a ogni serie."]
+    ];
+  } else {
+    rows=[
+      ["Vicinanza al cedimento","allenati con qualità e 1–3 ripetizioni di margine a fine serie."],
+      ["Progressione","aumenta carico o ripetizioni quando l'esecuzione resta pulita su tutte le serie."],
+      ["Esecuzione","controllo su discesa e risalita, ampiezza piena."]
+    ];
+  }
+  return `<div class="build-guide"><div class="bg-h">Come allenare questa seduta · ${bGoal}</div>${rows.map(r=>`<div class="bg-line"><b>${r[0]}:</b> ${r[1]}</div>`).join("")}</div>`;
 }
 function renderBuilderResult(){
   const el=document.getElementById("bResult"); if(!el) return;
   if(!bSession || !Object.keys(bSession).length){ el.innerHTML='<div class="res-hint">Scegli almeno una parte da allenare, poi premi «Genera seduta».</div>'; return; }
-  let total=0; let html='<div class="lib-card build-out">';
-  BUILD_ORDER.forEach(g=>{ if(!bSession[g]) return;
-    html+=`<div class="build-group"><div class="build-group-h">${g}</div>`;
-    bSession[g].forEach(ex=>{ total++; html+=`<div class="build-row"><div class="br-main"><span class="br-name">${ex[0]}</span><span class="br-weight">${weightHint(ex)}</span></div><span class="br-sets">${schemeWithTempo(ex[1])}</span></div>`; });
+  /* Ordina la seduta: a blocchi o alternata (round-robin). Il Core va sempre in fondo, a parte. */
+  const coreExs=(bSession["Core"]||[]);
+  const mainGroups=BUILD_ORDER.filter(g=>g!=="Core" && bSession[g] && bSession[g].length);
+  const seq=[];   /* [gruppo, esercizio] nell'ordine di esecuzione (senza Core) */
+  if(bStruct==="A blocchi"){
+    mainGroups.forEach(g=>bSession[g].forEach(ex=>seq.push([g,ex])));
+  } else {
+    const max=Math.max(0,...mainGroups.map(g=>bSession[g].length));
+    for(let i=0;i<max;i++) mainGroups.forEach(g=>{ if(bSession[g][i]) seq.push([g,bSession[g][i]]); });
+  }
+  const rowHtml=(g,ex,idx,withRec)=>`<div class="build-row"><div class="br-main"><span class="br-name"><span class="br-idx">${idx}</span>${ex[0]}<span class="br-tag">${g}</span></span><span class="br-cue">${cueFor(ex)}</span><span class="br-weight">${weightHint(ex)}</span></div><span class="br-sets">${withRec===false?schemeWithTempo(schemeForGoal(ex)):schemeText(ex)}</span></div>`;
+  /* Superset finale opzionale: due esercizi EXTRA in stile finisher, non presi dal corpo */
+  let bodySeq=seq, fin=null;
+  if(bSuperset){ if(bSession.__fin===undefined) bSession.__fin=pickFinisher(); fin=bSession.__fin; }
+  let total=seq.length+coreExs.length+(fin?fin.length:0);
+  let html='<div class="lib-card build-out">';
+  if(bStruct==="A blocchi"){
+    let curG=null, n=0;
+    bodySeq.forEach(([g,ex])=>{
+      if(g!==curG){ if(curG!==null) html+=`</div>`; html+=`<div class="build-group"><div class="build-group-h">${g}</div>`; curG=g; n=0; }
+      n++; html+=rowHtml(g,ex,n);
+    });
+    if(curG!==null) html+=`</div>`;
+  } else {
+    html+=`<div class="build-group">`;
+    bodySeq.forEach(([g,ex],i)=>{ html+=rowHtml(g,ex,i+1); });
     html+=`</div>`;
-  });
-  html+=`</div><div class="build-note">${total} esercizi · <b>sola forza</b> · livello <b>${bLevel}</b>${bRef>0?` · rif. ${bRef} kg`:""}. I pesi sono un punto di partenza: scegli il carico che ti lascia <b>1–2 ripetizioni di margine</b> a fine serie e aggiusta. Per goblet o esercizi a un manubrio usa un solo manubrio più pesante. Recupero 2–3' sui fondamentali, 1–2' sugli accessori.${(bTempo&&bTempo!=='Libero')?` Tempo <b>${bTempo}</b> = secondi di discesa · (pausa) · salita.`:''}</div>`;
+  }
+  if(fin){
+    const a=fin[0], b=fin[1];
+    const ssRec=bGoal==="Forza"?"2-3'":(bGoal==="Ipertrofia"?"90\"-2'":"1-2'");
+    html+=`<div class="build-group"><div class="build-group-h">Superset finale <span class="bg-sub">${a[0]} + ${b[0]}</span></div>`;
+    html+=rowHtml(a[0],a[1],"A",false)+rowHtml(b[0],b[1],"B",false);
+    html+=`<div class="build-ss-note">Esegui A e B di fila senza pausa, poi recupera ${ssRec}.</div></div>`;
+  } else if(bSuperset){
+    html+=`<div class="build-ss-note">Superset finale saltato: non ci sono due movimenti diversi da quelli già nella seduta (aggiungi un altro gruppo o dell'attrezzatura per averlo).</div>`;
+  }
+  if(coreExs.length){
+    html+=`<div class="build-group"><div class="build-group-h">Core <span class="bg-sub">circuito</span></div>`;
+    coreExs.forEach((ex,i)=>{ html+=rowHtml("Core",ex,i+1); });
+    html+=`<div class="build-ss-note">4–8 min <b>oppure</b> 4 round · nessun recupero tra gli esercizi (recupera solo tra un round e l'altro).</div></div>`;
+  }
+  html+=`</div><div class="build-note">${total} esercizi · <b>${bGoal}</b> · ${bStruct.toLowerCase()}${bSuperset?' + superset finale':''} · livello <b>${bLevel}</b>${bRef>0?` · rif. ${bRef} kg`:""}. I pesi sono un punto di partenza: scegli il carico che ti lascia <b>1–2 ripetizioni di margine</b> a fine serie e aggiusta. Per goblet o esercizi a un manubrio usa un solo manubrio più pesante. Recupero indicato accanto a ogni esercizio.${(bTempo&&bTempo!=='Libero')?` Tempo <b>${bTempo}</b> = secondi di discesa · (pausa) · salita.`:''}</div>`;
+  html+=bGuidance();
   const push=["Petto","Spalle","Tricipiti"], pull=["Schiena","Bicipiti"];
   const hasPush=[...bSel].some(g=>push.includes(g)), hasPull=[...bSel].some(g=>pull.includes(g));
   if(hasPush&&!hasPull) html+=`<div class="build-warn">Hai solo esercizi di <b>spinta</b>: per bilanciare valuta di aggiungere <b>Schiena</b> o <b>Bicipiti</b>.</div>`;
   else if(hasPull&&!hasPush) html+=`<div class="build-warn">Hai solo esercizi di <b>trazione</b>: per bilanciare valuta di aggiungere <b>Petto</b>, <b>Spalle</b> o <b>Tricipiti</b>.</div>`;
-  html+=`<button type="button" class="build-savebtn" id="bSaveBtn">Salva questa seduta</button>`;
+  html+=`<div class="build-swipe-hint">↔ Scorri sulla seduta per rigenerarla</div><button type="button" class="build-savebtn" id="bSaveBtn">Salva questa seduta</button>`;
   el.innerHTML=html;
   const sb=document.getElementById("bSaveBtn");
   if(sb) sb.onclick=()=>{ saveCurrentSession(); sb.textContent="Salvata ✓"; sb.disabled=true; };
@@ -3439,11 +3774,16 @@ function renderBuilder(){
   const el=document.getElementById("builderContent"); if(!el) return;
   el.innerHTML=`
     <div class="conv-head">Costruttore seduta</div>
-    <div class="lib-card"><p style="font-size:13px;line-height:1.55;color:var(--chalk-dim);margin:0;">Scegli le <b>parti da allenare</b>: ti creo una seduta di <b>sola forza</b> mescolando gli esercizi. Es. petto + tricipiti, oppure petto + bicipiti. Solo esercizi di <b>The Standard</b> (manubri + corpo libero), niente EMOM o metcon.</p></div>
     <div class="section-label"><span>Parti da allenare</span><div class="line"></div></div>
     <div class="build-chips" id="bChips"></div>
-    <div class="section-label"><span>Attrezzatura <span style="text-transform:none;letter-spacing:0;color:var(--chalk-dim);font-size:11px;">(manubri + corpo libero sempre inclusi)</span></span><div class="line"></div></div>
+    <div class="section-label"><span>Attrezzatura <span style="text-transform:none;letter-spacing:0;color:var(--chalk-dim);font-size:11px;">(corpo libero sempre incluso · togli Manubri per una seduta a corpo libero)</span></span><div class="line"></div></div>
     <div class="build-chips" id="bEquipSeg"></div>
+    <div class="section-label"><span>Obiettivo</span><div class="line"></div></div>
+    <div class="build-chips" id="bGoalSeg"></div>
+    <div class="section-label"><span>Struttura</span><div class="line"></div></div>
+    <div class="build-chips" id="bStructSeg"></div>
+    <div class="section-label"><span>Superset finale <span style="text-transform:none;letter-spacing:0;color:var(--chalk-dim);font-size:11px;">(aggiunge un superset in chiusura)</span></span><div class="line"></div></div>
+    <div class="build-chips" id="bSupersetSeg"></div>
     <div class="section-label"><span>Esercizi per gruppo</span><div class="line"></div></div>
     <div class="build-chips" id="bCountSeg"></div>
     <div class="section-label"><span>Livello</span><div class="line"></div></div>
@@ -3459,7 +3799,7 @@ function renderBuilder(){
     <div id="bResult"></div>
     <div class="section-label"><span>Sedute salvate</span><div class="line"></div></div>
     <div id="bSaved"></div>`;
-  renderBuilderChips(); renderEquipSeg(); renderCountSeg(); renderLevelSeg(); renderTempoSeg();
+  renderBuilderChips(); renderEquipSeg(); renderGoalSeg(); renderStructSeg(); renderSupersetSeg(); renderCountSeg(); renderLevelSeg(); renderTempoSeg();
   const ref=document.getElementById("bRefInput"); ref.value=(bRef??""); ref.oninput=()=>{ bRef=parseFloat((ref.value||"").replace(",",".")); bSave(); renderBuilderResult(); };
   document.getElementById("bGen").onclick=()=>{ if(bSel.size) bGenerate(); else renderBuilderResult(); };
   document.getElementById("bShuf").onclick=()=>{ if(bSel.size) bGenerate(); };
@@ -3470,7 +3810,8 @@ function bDateLabel(){ const d=new Date(); return ("0"+d.getDate()).slice(-2)+"/
 function saveCurrentSession(){
   if(!bSession) return;
   const ex=[];
-  BUILD_ORDER.forEach(g=>{ if(bSession[g]) bSession[g].forEach(e=>ex.push([g, e[0], schemeWithTempo(e[1]), weightHint(e)])); });
+  BUILD_ORDER.forEach(g=>{ if(bSession[g]) bSession[g].forEach(e=>ex.push([g, e[0], schemeText(e), weightHint(e), cueFor(e)])); });
+  if(bSuperset && Array.isArray(bSession.__fin)) bSession.__fin.forEach(([g,e])=>ex.push([g, e[0]+" (superset finale)", schemeWithTempo(schemeForGoal(e)), weightHint(e), cueFor(e)]));
   const entry={ id:"b"+Date.now(), dateLabel:bDateLabel(), parts:[...bSel].sort((a,b)=>BUILD_ORDER.indexOf(a)-BUILD_ORDER.indexOf(b)), ex:ex };
   if(!store.data.builderSaved) store.data.builderSaved=[];
   store.data.builderSaved.push(entry); store.save();
@@ -3491,7 +3832,7 @@ function renderSavedSessions(){
         <div class="saved-head-right"><button type="button" class="saved-del" data-del="${s.id}">Elimina</button><span class="saved-chev">▾</span></div>
       </div>
       <div class="saved-body">
-        <div class="lib-card build-out">${s.ex.map(e=>`<div class="build-row"><div class="br-main"><span class="br-name">${e[1]}</span><span class="br-weight">${e[3]}</span></div><span class="br-sets">${e[2]}</span></div>`).join("")}</div>
+        <div class="lib-card build-out">${s.ex.map(e=>`<div class="build-row"><div class="br-main"><span class="br-name">${e[1]}</span>${e[4]?`<span class="br-cue">${e[4]}</span>`:""}<span class="br-weight">${e[3]}</span></div><span class="br-sets">${e[2]}</span></div>`).join("")}</div>
         ${perExerciseLog("bld", s.id, exRows, label)}
         ${completionToggle("bld", s.id, label)}
       </div>
@@ -3530,7 +3871,7 @@ function downloadBackup(){
 }
 function importBackup(file){
   const r=new FileReader();
-  r.onload=()=>{ if(store.importJSON(r.result)){ toast("Dati importati ✓"); refreshAll(); } else toast("File non valido"); };
+  r.onload=()=>{ if(store.importJSON(r.result)){ bLoadState(); refreshAll(); toast("Dati importati ✓"); } else toast("File non valido"); };
   r.onerror=()=>toast("Lettura non riuscita");
   r.readAsText(file);
 }
@@ -3542,6 +3883,7 @@ function refreshAll(){
   try{ renderPlates(); renderDayDetail(); }catch(e){}
   try{ renderCoreDetail(); }catch(e){}
   try{ if(typeof renderCalendar==="function") renderCalendar(); }catch(e){}
+  try{ if(typeof renderBuilder==="function") renderBuilder(); }catch(e){}
 }
 
 /* ============== CALENDARIO ============== */
@@ -3626,7 +3968,7 @@ document.getElementById("homeBuilderCard").onclick=()=>setCategory("builder");
 document.getElementById("backupExport").onclick=()=>downloadBackup();
 document.getElementById("backupImport").onclick=()=>document.getElementById("backupFile").click();
 document.getElementById("backupFile").onchange=(e)=>{ if(e.target.files&&e.target.files[0]){ importBackup(e.target.files[0]); e.target.value=""; } };
-document.getElementById("backupReset").onclick=()=>{ if(confirm("Azzerare tutti i dati salvati (log, pesi, completamenti, calendario)? L'operazione non è reversibile.")){ store.reset(); refreshAll(); toast("Dati azzerati"); } };
+document.getElementById("backupReset").onclick=()=>{ if(confirm("Azzerare tutti i dati salvati (log, pesi, completamenti, calendario, sedute salvate e impostazioni del generatore)? L'operazione non è reversibile.")){ store.reset(); bResetState(); try{ localStorage.removeItem("stdBuilder_v1"); }catch(e){} refreshAll(); toast("Dati azzerati"); } };
 setCategory("home");
 </script>
 </body>
